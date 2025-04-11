@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../widgets/weight_chart.dart';
+import '../widgets/weight_list.dart';
+import '../widgets/weight_entry_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -7,62 +12,27 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _weightController = TextEditingController();
-  final List<Map<String, dynamic>> _weights = []; // Stores weight & date
+  List<Map<String, dynamic>> _weights = [];
 
-  void _showWeightEntryModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.black,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Enter Weight',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _weightController,
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Enter weight (kg)',
-                  hintStyle: TextStyle(color: Colors.white54),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 15),
-              ElevatedButton(
-                onPressed: _saveWeight,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text('Save'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadWeights();
+  }
+
+  void _loadWeights() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? storedWeights = prefs.getString('weights');
+    if (storedWeights != null) {
+      setState(() {
+        _weights = List<Map<String, dynamic>>.from(jsonDecode(storedWeights));
+      });
+    }
+  }
+
+  void _saveWeights() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('weights', jsonEncode(_weights));
   }
 
   void _saveWeight() {
@@ -75,55 +45,49 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _weights.add({
         'weight': weight,
-        'date': DateTime.now(),
+        'date': DateTime.now().toString(),
       });
     });
 
+    _saveWeights();
     _weightController.clear();
     Navigator.pop(context);
+  }
+
+  void _showWeightEntryModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.black,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => WeightEntryModal(
+        controller: _weightController,
+        onSave: _saveWeight,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text('Weight Tracker'),
-        centerTitle: true,
+        backgroundColor: Colors.black,
       ),
-      body: _weights.isEmpty
-          ? Center(
-              child: Text(
-                'No Data Yet',
-                style: TextStyle(color: Colors.white70, fontSize: 18),
-              ),
-            )
-          : ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: _weights.length,
-              itemBuilder: (context, index) {
-                final entry = _weights[index];
-                return Card(
-                  color: Colors.grey[900],
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    title: Text(
-                      '${entry['weight']} kg',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      '${entry['date'].toString().split('.')[0]}', // Show formatted date
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: Column(
+        children: [
+          Expanded(child: WeightChart(weights: _weights)),
+          Expanded(child: WeightList(weights: _weights)),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showWeightEntryModal,
-        child: Icon(Icons.add, color: Colors.black),
-        backgroundColor: Colors.white,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.deepPurple,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
