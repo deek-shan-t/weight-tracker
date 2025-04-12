@@ -3,8 +3,9 @@ import 'package:intl/intl.dart';
 
 class WeightList extends StatelessWidget {
   final List<Map<String, dynamic>> weights;
+  final void Function(int) onDelete;
 
-  WeightList({required this.weights});
+  WeightList({required this.weights, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +20,10 @@ class WeightList extends StatelessWidget {
         return ListTile(
           title: Text('${entry['weight']} kg'),
           subtitle: Text(formattedDate),
+          trailing: IconButton(
+            icon: Icon(Icons.delete, color: Colors.red),
+            onPressed: () => onDelete(index),
+          ),
         );
       },
     );

@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../widgets/weight_chart.dart';
 import '../widgets/weight_list.dart';
 import '../widgets/weight_entry_modal.dart';
+import '../screens/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,10 +15,20 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _weightController = TextEditingController();
   List<Map<String, dynamic>> _weights = [];
 
+  double? _goalWeight;
+
   @override
   void initState() {
     super.initState();
     _loadWeights();
+    _loadGoalWeight();
+  }
+
+  Future<void> _loadGoalWeight() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _goalWeight = prefs.getDouble('goalWeight');
+    });
   }
 
   void _loadWeights() async {
@@ -43,10 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (weight == null) return;
 
     setState(() {
-      _weights.add({
-        'weight': weight,
-        'date': DateTime.now().toString(),
-      });
+      _weights.add({'weight': weight, 'date': DateTime.now().toString()});
     });
 
     _saveWeights();
@@ -62,10 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => WeightEntryModal(
-        controller: _weightController,
-        onSave: _saveWeight,
-      ),
+      builder:
+          (context) => WeightEntryModal(
+            controller: _weightController,
+            onSave: _saveWeight,
+          ),
     );
   }
 
@@ -75,12 +84,36 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text('Weight Tracker'),
-        backgroundColor: Colors.black,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
+          ),
+        ],
       ),
+
       body: Column(
         children: [
-          Expanded(child: WeightChart(weights: _weights)),
-          Expanded(child: WeightList(weights: _weights)),
+          Expanded(
+            child: WeightChart(weights: _weights, goalWeight: _goalWeight),
+          ),
+          Expanded(
+            child: WeightList(
+              weights: _weights,
+              onDelete: (index) {
+                setState(() {
+                  _weights.removeAt(index);
+                });
+                _saveWeights();
+              },
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
