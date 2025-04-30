@@ -4,7 +4,6 @@ import 'dart:convert';
 import '../widgets/weight_chart.dart';
 import '../widgets/weight_list.dart';
 import '../widgets/weight_entry_modal.dart';
-import '../screens/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,7 +13,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _weightController = TextEditingController();
   List<Map<String, dynamic>> _weights = [];
-
   double? _goalWeight;
 
   @override
@@ -31,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _loadWeights() async {
+  Future<void> _loadWeights() async {
     final prefs = await SharedPreferences.getInstance();
     final String? storedWeights = prefs.getString('weights');
     if (storedWeights != null) {
@@ -41,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _saveWeights() async {
+  Future<void> _saveWeights() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('weights', jsonEncode(_weights));
   }
@@ -70,11 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder:
-          (context) => WeightEntryModal(
-            controller: _weightController,
-            onSave: _saveWeight,
-          ),
+      builder: (context) => WeightEntryModal(
+        controller: _weightController,
+        onSave: _saveWeight,
+      ),
     );
   }
 
@@ -82,22 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text('Weight Tracker'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-
       body: Column(
         children: [
           Expanded(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'widgets/main_navigation.dart'; // Import the new component
 
 void main() {
   runApp(WeightTrackingApp());
@@ -13,7 +13,7 @@ class WeightTrackingApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: HomeScreen(),
+      home: MainNavigation(),
     );
   }
 }

@@ -15,10 +15,19 @@ class WeightChart extends StatelessWidget {
   }
 
   List<String> _generateDateLabels() {
-    return weights.map((e) {
-      final date = DateTime.parse(e['date']);
-      return DateFormat.Md().format(date);
-    }).toList();
+    final uniqueDates = weights.map((e) {
+      return DateTime.parse(e['date']);
+    }).toSet();
+
+    final startDate = uniqueDates.reduce((a, b) => a.isBefore(b) ? a : b);
+    final endDate = uniqueDates.reduce((a, b) => a.isAfter(b) ? a : b);
+
+    final allDates = List<DateTime>.generate(
+      endDate.difference(startDate).inDays + 1,
+      (index) => startDate.add(Duration(days: index)),
+    );
+
+    return allDates.map((date) => DateFormat.Md().format(date)).toList();
   }
 
   @override

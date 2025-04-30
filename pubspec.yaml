@@ -37,6 +37,9 @@ dependencies:
   fl_chart: ^0.70.2
   shared_preferences: ^2.5.3
   intl: ^0.20.2
+  google_sign_in: ^6.1.0
+  flutter_local_notifications: ^19.1.0
+  timezone: ^0.10.1
 
 dev_dependencies:
   flutter_test:
